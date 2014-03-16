@@ -15,9 +15,9 @@
 
 from __future__ import print_function, division
 
+import os
 import sys
-
-debug = True
+import argparse
 
 # Valid characters for each pae element
 valid_pae_chars = {
@@ -385,7 +385,6 @@ def pae2abc(pae, fields={}):
         'body': {
             'tune': '',
             'lyrics': '',
-            'debug': '',
             }
         }
 
@@ -444,18 +443,20 @@ def pae2abc(pae, fields={}):
     for field in valid_abc_chars['body_fields']:
         if field in abc['header']:
             out.append('%s: %s' % (field, abc['header'][field]))
-    if debug:
+    if args.debug:
         # TODO: change to new syntax (stylesheet?)
-        out.append('%%wordsfont Courier 11')
-        out.append('W: pae: %s' % (pae.replace('%', '')))
-        out.append('W: abc: %s' % (abc['body']['tune']))
+        out.append('%%writefields N true')
+        out.append('%%annotationfont Courier 11')
+        out.append('N: pae: %s' % (pae.replace('%', '')))
+        out.append('N: abc: %s' % (abc['body']['tune']))
     out.append('')
 
     return '\n'.join(out)
 
 
-def main(filename):
-    # TODO: split between process arguments and process file
+def convert_pae_file(filename):
+    '''Convert a file with PAE entries, with optional ABC fields'''
+
     n = 0
     pae = ''
     fields = {}
@@ -468,11 +469,10 @@ def main(filename):
                 value = line[2:].strip()
                 fields[key] = value
             elif line[0].startswith('%'):
-                pae = line
                 if not 'X' in fields:
                     n += 1
                     fields['X'] = n
-                abc = pae2abc(pae, fields)
+                abc = pae2abc(line, fields)
                 print(abc)
                 fields = {}
             elif line.startswith('---'):
@@ -480,6 +480,32 @@ def main(filename):
     f.close()
 
 
+def main(args):
+    if args.file:
+        if os.path.isfile(args.file):
+            convert_pae_file(args.file)
+        else:
+            print('Error: %s not found' % (args.file))
+            sys.exit(1)
+    if args.pae:
+        abc = pae2abc(args.pae)
+        print(abc)
+        
+
 if __name__ == '__main__':
-    # TODO: argparse
-    main(sys.argv[1])
+    parser = argparse.ArgumentParser(description='A Plaine and Easie Code to ABC music notation converter')
+    parser.add_argument('-f', '--file',
+                        nargs='?',
+                        default='',
+                        help='input file')
+    parser.add_argument('-d', '--debug',
+                        action='store_true',
+                        default=False,
+                        help='debug mode')
+    parser.add_argument('pae',
+                        nargs='?',
+                        default='',
+                        action='store')
+    args = parser.parse_args()
+
+    main(args)
