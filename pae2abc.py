@@ -9,10 +9,6 @@
 
 # Released under GPLv3 or later
 
-# TODO:
-# start file with %abc-2.1
-# argparse
-
 from __future__ import print_function, division
 
 import os
@@ -486,7 +482,9 @@ def main(args):
     if args.file:
         if os.path.isfile(args.file):
             abc = convert_pae_file(args.file)
-            print('\n'.join(abc))
+            if abc:
+                print('%abc-2.1\n')
+                print('\n'.join(abc))
         else:
             print('Error: %s not found' % (args.file))
             sys.exit(1)
