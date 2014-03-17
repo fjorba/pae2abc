@@ -457,6 +457,7 @@ def pae2abc(pae, fields={}):
 def convert_pae_file(filename):
     '''Convert a file with PAE entries, with optional ABC fields'''
 
+    out = []
     n = 0
     pae = ''
     fields = {}
@@ -473,17 +474,19 @@ def convert_pae_file(filename):
                     n += 1
                     fields['X'] = n
                 abc = pae2abc(line, fields)
-                print(abc)
+                out.append(abc)
                 fields = {}
             elif line.startswith('---'):
                 break
     f.close()
+    return out
 
 
 def main(args):
     if args.file:
         if os.path.isfile(args.file):
-            convert_pae_file(args.file)
+            abc = convert_pae_file(args.file)
+            print('\n'.join(abc))
         else:
             print('Error: %s not found' % (args.file))
             sys.exit(1)
