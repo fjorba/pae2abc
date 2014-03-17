@@ -507,5 +507,7 @@ if __name__ == '__main__':
                         default='',
                         action='store')
     args = parser.parse_args()
+    if not args.file and not args.pae:
+        parser.error('Either --file or a pae string are required')
 
     main(args)
