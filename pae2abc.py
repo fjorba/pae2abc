@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# A Plaine and Easie Code to ABC musical notation converter
+# A Plaine and Easie Code to ABC music notation converter
 
 # References:
 # PAE: http://www.iaml.info/en/activities/projects/plain_and_easy_code
 # ABC: http://abcnotation.com/wiki/abc:standard:v2.1
+# pae2abc: https://github.com/fjorba/pae2abc
 
 # Released under GPLv3 or later
 
@@ -188,7 +189,7 @@ def notelength2abc(pae):
 
 
 def tune2abc(pae):
-    '''Translate tune to abc'''
+    '''Translate pae tune to abc'''
 
     # Set some defaults
     note = ''
@@ -207,7 +208,7 @@ def tune2abc(pae):
     pae_list = list(pae)
     abc_list = []
     while pae_list:
-        # Main loop or parser. Get next pae character and convert it to abc
+        # Main loop parser. Get next pae character and convert it to abc
         c = pae_list.pop(0)
         if c == 'b':
             # flatten
@@ -370,7 +371,8 @@ def tune2abc(pae):
 
 def pae2abc(pae, fields={}):
     '''Main converter funcion; split the pae string into header and
-    body, and convert then'''
+    body, and convert them'''
+
     # Destination structure
     abc = {
         'header': {
@@ -390,8 +392,8 @@ def pae2abc(pae, fields={}):
     for field in fields:
         abc['header'][field] = fields[field]
 
-    # Split the pae string in a list of chars.  Main loop pops one
-    # char at a time.
+    # Split the pae string in header (clef, accidentals and time
+    # signature) and body, looping one char at a time.
     pae_list = list(pae)
     while pae_list:
         c = pae_list.pop(0)
@@ -455,7 +457,6 @@ def convert_pae_file(filename):
 
     out = []
     n = 0
-    pae = ''
     fields = {}
     f = open(filename)
     for line in f:
@@ -479,6 +480,8 @@ def convert_pae_file(filename):
 
 
 def main(args):
+    '''Either convert a file or a supplied string as parameter.'''
+
     if args.file:
         if os.path.isfile(args.file):
             abc = convert_pae_file(args.file)
