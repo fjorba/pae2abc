@@ -271,9 +271,15 @@ def tune2abc(pae):
             pass
         elif c == 'i':
             # Repeat last measure
-            abc = '\t'.join(abc_list)
-            last_measure = abc.split('|')[-2]
-            last_measure = last_measure.split('\t')
+            # Fist, find where bar signs are
+            pos = [i for i in range(len(abc_list)) if '|' in abc_list[i]]
+            if len(pos) == 1:
+                # If there was a single bar sign, add a -2 (that will
+                # become a zero later) as first position.
+                pos.insert(0, -2)
+            # Extract last measure values, excluding bar signs,
+            # because they are handled by the /i/ syntax anyway.
+            last_measure = abc_list[pos[-2]+2:pos[-1]]
             abc_list.extend(last_measure)
         elif c == '{':
             beaming = True
