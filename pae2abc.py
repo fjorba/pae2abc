@@ -46,6 +46,7 @@ valid_abc_chars = {
 def clef2abc(pae):
     '''Translate pae clef to abc'''
     pae2abc = {
+        # List is short enough, it is easier to be explicit.
         'C1': 'alto1',
         'C2': 'alto2',
         'C3': 'alto3',
@@ -65,11 +66,13 @@ def clef2abc(pae):
         'f2': 'bass-8',
         'g2': 'treble-8',
         }
-    try:
+    if len(pae) == 3:
+        # Either has the correct length, or it is invalid
         shape = pae[0]
         notation = pae[1]
         position = pae[2]
-    except:
+    else:
+        # Default values
         shape = 'G'
         notation = '-'
         position = '2'
