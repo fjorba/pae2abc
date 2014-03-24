@@ -25,7 +25,7 @@ valid_pae_chars = {
     'timesig': '12346789/co.',
     'notelength': '0123456789.',
     'accidentals': 'xbnCDEFGAB[]',
-    'tune': "CDEFGAB ',0123456789.xbngqr-=/:t+(){}!fi",
+    'tune': "CDEFGAB ',0123456789.xbngqr-=/:t+();{}!fi",
     }
 
 # Valid characters for a few abc elements
@@ -40,6 +40,7 @@ valid_abc_chars = {
     # as pae values, this restriction should not be a problem.
     'body_fields': 'NQsVWw',
     'notes': 'CDEFGABcdefgab',
+    'accidentals': '^_=',
     }
 
 
@@ -202,7 +203,6 @@ def tune2abc(pae):
     slur = False
     trill = False
     beaming = False
-    fermata = False
     acciaccatura = False
     appoggiatura = False
     irregular_group = False
@@ -241,45 +241,51 @@ def tune2abc(pae):
                 appoggiatura += pae_list.pop(0)
                 beaming = True
         elif c == '(':
-            if pae_list:
-                if pae_list[0] == '{':
-                    irregular_group = '3' # ????
-                if pae_list[0].isdigit(): # or later
-                    irregular_group = pae_list.pop(0)
-            if irregular_group:
-                abc_list.append('(' + irregular_group)
+            # This can be either a fermata (includes only one note or
+            # rest; accidentals or octave symbols must be outside the
+            # parentheses) or an irregular rhythmic group.
+            if len(pae_list) > 1 and pae_list[1] == ')':
+                # Single note or silence: fermata
+                abc_list.append('H')
             else:
-                # fermata
-                fermata = c
-            # TODO: triplets, quintuplets, etc.
+                if not number:
+                    number = '8'
+                irregular_group = number
+                abc_list.append('(') # Remember the position where it starts
         elif c == ';':
-            # end of irregular group
+            # Second number of irregular group
             if pae_list and pae_list[0].isdigit():
                 number = pae_list.pop(0)
-            else:
-                number = '3'
-            # Look for ( to add the pair of p:q numbers
-            i = -1
-            while abc_list[i][0] != '(':
-                i -= 1
-            abc_list[i] = '(%s:%s' % (irregular_group, number)
+                # In ABC the order of the numbers is reversed
+                irregular_group = '%s:%s' % (number, irregular_group)
         elif c == ')':
-            # close irregular group
-            pass
+            if irregular_group:
+                # close irregular group
+                if len(irregular_group) == 1:
+                    irregular_group = '3'
+                # Look for ( to add the pair of p:q numbers
+                found = [i for i in range(len(abc_list)) if '(' in abc_list[i]]
+                if found:
+                    i = found[-1]
+                    abc_list[i] = '(%s' % (irregular_group)
+                    if not beaming:
+                        abc_list[i] += ' '
+                irregular_group = ''
+                number = '' # Needed?
         elif c == '.':
             # TODO: repeat rythmic model (4.11.3)
             pass
         elif c == 'i':
             # Repeat last measure
             # Fist, find where bar signs are
-            pos = [i for i in range(len(abc_list)) if '|' in abc_list[i]]
-            if len(pos) == 1:
+            found = [i for i in range(len(abc_list)) if '|' in abc_list[i]]
+            if len(found) == 1:
                 # If there was a single bar sign, add a -2 (that will
                 # become a zero later) as first position.
-                pos.insert(0, -2)
+                found.insert(0, -2)
             # Extract last measure values, excluding bar signs,
             # because they are handled by the /i/ syntax anyway.
-            last_measure = abc_list[pos[-2]+2:pos[-1]]
+            last_measure = abc_list[found[-2]+2:found[-1]]
             abc_list.extend(last_measure)
         elif c == '{':
             beaming = True
@@ -353,9 +359,6 @@ def tune2abc(pae):
                     # closed by the next r
                     note = '{/%s' % (note)
                 acciaccatura = False
-            elif fermata:
-                note = 'H%s' % (note)
-                fermata = False
             elif trill:
                 i = len(abc_list) - 1
                 while i >= 0 and abc_list[i] and abc_list[i][0] not in valid_abc_chars['notes']:
