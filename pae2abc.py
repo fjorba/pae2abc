@@ -305,7 +305,7 @@ def tune2abc(pae):
             number = c
             while pae_list and pae_list[0] in valid_pae_chars['notelength']:
                 number += pae_list.pop(0)
-            if pae_list and pae_list[0] == '(':
+            if pae_list and '(' in pae_list[0]:
                 irregular_group = number
         elif c == '=':
             # measure rest
@@ -359,21 +359,23 @@ def tune2abc(pae):
                     # closed by the next r
                     note = '{/%s' % (note)
                 acciaccatura = False
-            elif trill:
-                i = len(abc_list) - 1
-                while i >= 0 and abc_list[i] and abc_list[i][0] not in valid_abc_chars['notes']:
-                    i -= 1
-                if i >= 0:
-                    abc_list[i] = 'T%s' % (abc_list[i])
-                trill = False
-            elif slur:
-                i = len(abc_list) - 1
-                while i >= 0 and abc_list[i] and abc_list[i][0] not in valid_abc_chars['notes']:
-                    i -= 1
-                if i >= 0:
-                    abc_list[i] = '(%s' % (abc_list[i])
-                note = '%s)' % (note)
-                slur = False
+            elif slur or trill:
+                # Both share the same logic; handle them together.
+                # Look for most recent note
+                found = [i for i in range(len(abc_list))
+                         if abc_list[i][0] in valid_abc_chars['notes']]
+                if found:
+                    i = found[-1]
+                    if i > 1 and abc_list[i-1] in valid_abc_chars['accidentals']:
+                        # Include its accidental, if any
+                        i -= 1
+                    if trill:
+                        abc_list[i] = 'T%s' % (abc_list[i])
+                        trill = False
+                    if slur:
+                        abc_list[i] = '(%s' % (abc_list[i])
+                        note = '%s)' % (note)
+                        slur = False
             abc_list.append(note)
             if not beaming:
                 abc_list.append(' ')
