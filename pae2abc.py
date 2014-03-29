@@ -199,7 +199,6 @@ def tune2abc(pae):
     note = ''
     octave = "'"
     number = ''
-    dot = ''
     slur = False
     trill = False
     beaming = False
@@ -334,7 +333,7 @@ def tune2abc(pae):
             number = ''
         elif c == '-':
             # note rest
-            abc_list.append('z' + notelength2abc(number + dot))
+            abc_list.append('z' + notelength2abc(number))
             abc_list.append(' ')
         elif c in valid_pae_chars['bar']:
             # bar
@@ -375,16 +374,13 @@ def tune2abc(pae):
                     number = ''
                     note = note + notelength2abc(rhythmic_model.pop(0))
                 else:
-                    note = note + notelength2abc(number + dot)
-                    dot = ''
+                    note = note + notelength2abc(number)
             elif rhythmic_model or rhythmic_backup:
                 if not rhythmic_model:
                     # Model exhausted; start anew
                     rhythmic_model = rhythmic_backup[:]
                 note = note + notelength2abc(rhythmic_model.pop(0))
-            if dot:
-                dot = ''
-            elif appoggiatura:
+            if appoggiatura:
                 if len(appoggiatura) == 1:
                     note = '{%s}' % (note)
                 else:
