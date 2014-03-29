@@ -205,6 +205,8 @@ def tune2abc(pae):
     beaming = False
     acciaccatura = False
     appoggiatura = False
+    rhythmic_model = False
+    rhythmic_backup = False
     irregular_group = False
 
     # Input and output structures are lists.
@@ -272,9 +274,6 @@ def tune2abc(pae):
                         abc_list[i] += ' '
                 irregular_group = ''
                 number = '' # Needed?
-        elif c == '.':
-            # TODO: repeat rythmic model (4.11.3)
-            pass
         elif c == 'i':
             # Repeat last measure
             # Fist, find where bar signs are
@@ -357,9 +356,33 @@ def tune2abc(pae):
             elif octave in [',', ',,', ',,,']:
                 note = c + octave
             if number:
-                note = note + notelength2abc(number + dot)
+                if rhythmic_model:
+                    # A new number signals the end of previous rhythmic model
+                    rhythmic_model = None
+                    rhythmic_backup = None
+                if len(number) > 1:
+                    # Start a new rhythmic model pattern
+                    rhythmic_model = []
+                    for c in number:
+                        if c == '.':
+                            # Group dot with its preceding value
+                            rhythmic_model[-1] += c
+                        else:
+                            rhythmic_model.append(c)
+                    # We need a full [:] backup of the rhythmic model
+                    # as we will consume the working copy as we use it.
+                    rhythmic_backup = rhythmic_model[:]
+                    number = ''
+                    note = note + notelength2abc(rhythmic_model.pop(0))
+                else:
+                    note = note + notelength2abc(number + dot)
+                    dot = ''
+            elif rhythmic_model or rhythmic_backup:
+                if not rhythmic_model:
+                    # Model exhausted; start anew
+                    rhythmic_model = rhythmic_backup[:]
+                note = note + notelength2abc(rhythmic_model.pop(0))
             if dot:
-                # note += dot
                 dot = ''
             elif appoggiatura:
                 if len(appoggiatura) == 1:
