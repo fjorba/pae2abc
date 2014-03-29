@@ -287,6 +287,22 @@ def tune2abc(pae):
             # because they are handled by the /i/ syntax anyway.
             last_measure = abc_list[found[-2]+2:found[-1]]
             abc_list.extend(last_measure)
+        elif c == '!':
+            # Repetition of notes
+            if c in abc_list:
+                # A previous ! marks the start position of the group
+                # to repeat
+                found = abc_list.index(c)
+                abc_list.remove(c)
+                # Count how many times (how many f) has to be repeated
+                n = 0
+                while pae_list and pae_list[0] == 'f':
+                    pae_list.pop(0)
+                    n += 1
+                repeat = abc_list[found:] * n
+                abc_list.extend(repeat)
+            else:
+                abc_list.append(c)
         elif c == '{':
             beaming = True
         elif c == '}':
