@@ -453,7 +453,7 @@ def pae2abc(pae, fields={}):
             if not abc['header']['clef']:
                 abc['header']['clef'] = clef2abc(value)
             else:
-                pass # append to tune
+                abc['body']['tune'] += '[K: %s] ' % (clef2abc(value))
         elif c == '$':
             value = ''
             while pae_list and pae_list[0] in valid_pae_chars['accidentals']:
@@ -461,7 +461,7 @@ def pae2abc(pae, fields={}):
             if not abc['header']['accidentals']:
                 abc['header']['accidentals'] = accidentals2abc(value)
             else:
-                pass # append to tune
+                abc['body']['tune'] += '[K: %s] ' % (accidentals2abc(value))
         elif c == '@':
             value = ''
             while pae_list and pae_list[0] in valid_pae_chars['timesig']:
@@ -469,12 +469,12 @@ def pae2abc(pae, fields={}):
             if not abc['header']['timesig']:
                 abc['header']['timesig'] = timesig2abc(value)
             else:
-                pass # append to tune
+                abc['body']['tune'] += '[M: %s] ' % (timesig2abc(value))
         elif c == ' ':
             value = ''
             while pae_list and pae_list[0] in valid_pae_chars['tune']:
                 value += pae_list.pop(0)
-            abc['body']['tune'] = tune2abc(value)
+            abc['body']['tune'] += tune2abc(value)
 
 
     # Build a proper abc stanza, filling only those available fields
