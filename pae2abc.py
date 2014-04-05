@@ -192,13 +192,12 @@ def notelength2abc(pae):
     return abc
 
 
-def tune2abc(pae):
+def tune2abc(pae, number=''):
     '''Translate pae tune to abc'''
 
     # Set some defaults
     note = ''
     octave = "'"
-    number = ''
     slur = False
     trill = False
     beaming = False
@@ -415,7 +414,7 @@ def tune2abc(pae):
             if not beaming:
                 abc_list.append(' ')
     abc = ''.join(abc_list)
-    return abc
+    return (abc, number)
 
 
 def pae2abc(pae, fields={}):
@@ -440,6 +439,7 @@ def pae2abc(pae, fields={}):
         abc['header']['X'] = 1
     for field in fields:
         abc['header'][field] = fields[field]
+    number = ''
 
     # Split the pae string in header (clef, accidentals and time
     # signature) and body, looping one char at a time.
@@ -474,8 +474,8 @@ def pae2abc(pae, fields={}):
             value = ''
             while pae_list and pae_list[0] in valid_pae_chars['tune']:
                 value += pae_list.pop(0)
-            abc['body']['tune'] += tune2abc(value)
-
+            (tune, number) = tune2abc(value, number)
+            abc['body']['tune'] += tune
 
     # Build a proper abc stanza, filling only those available fields
     out = []
