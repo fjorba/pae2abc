@@ -215,13 +215,13 @@ def tune2abc(pae, number=''):
         c = pae_list.pop(0)
         if c == 'b':
             # flatten
-            abc_list.append('_')
+            note = '_'
         elif c == 'x':
             # sharpen
-            abc_list.append('^')
+            note = '^'
         elif c == 'n':
             # naturalise
-            abc_list.append('=')
+            note = '='
         elif c == 't':
             # trill
             trill = c
@@ -244,7 +244,13 @@ def tune2abc(pae, number=''):
             # This can be either a fermata (includes only one note or
             # rest; accidentals or octave symbols must be outside the
             # parentheses) or an irregular rhythmic group.
-            if len(pae_list) > 1 and pae_list[1] == ')':
+            i = 0
+            notes = ''
+            while pae_list[i] != ')' and i < len(pae_list):
+                if pae_list[i] in valid_pae_chars['notes'] + '-':
+                    notes += pae_list[i]
+                i += 1
+            if len(notes) == 1:
                 # Single note or silence: fermata
                 abc_list.append('H')
             else:
@@ -344,15 +350,15 @@ def tune2abc(pae, number=''):
         elif c in valid_pae_chars['notes']:
             # notes
             if octave == "'":
-                note = c
+                note += c
             elif octave == "''":
-                note = c.lower()
+                note += c.lower()
             elif octave == "'''":
-                note = c.lower() + "'"
+                note += c.lower() + "'"
             elif octave == "''''":
-                note = c.lower() + "'''"
+                note += c.lower() + "'''"
             elif octave in [',', ',,', ',,,']:
-                note = c + octave
+                note += c + octave
             if number:
                 if rhythmic_model:
                     # A new number signals the end of previous rhythmic model
@@ -371,14 +377,14 @@ def tune2abc(pae, number=''):
                     # as we will consume the working copy as we use it.
                     rhythmic_backup = rhythmic_model[:]
                     number = ''
-                    note = note + notelength2abc(rhythmic_model.pop(0))
+                    note += notelength2abc(rhythmic_model.pop(0))
                 else:
-                    note = note + notelength2abc(number)
+                    note += notelength2abc(number)
             elif rhythmic_model or rhythmic_backup:
                 if not rhythmic_model:
                     # Model exhausted; start anew
                     rhythmic_model = rhythmic_backup[:]
-                note = note + notelength2abc(rhythmic_model.pop(0))
+                note += notelength2abc(rhythmic_model.pop(0))
             if appoggiatura:
                 if len(appoggiatura) == 1:
                     note = '{%s}' % (note)
@@ -395,22 +401,26 @@ def tune2abc(pae, number=''):
                 acciaccatura = False
             elif slur or trill:
                 # Both share the same logic; handle them together.
-                # Look for most recent note
-                found = [i for i in range(len(abc_list))
-                         if abc_list[i][0] in valid_abc_chars['notes']]
-                if found:
-                    i = found[-1]
-                    if i > 1 and abc_list[i-1] in valid_abc_chars['accidentals']:
-                        # Include its accidental, if any
+                # Look for most recent note or silence (for slur only)
+                i = len(abc_list) - 1
+                while i >= 0:
+                    found = [True for c in abc_list[i]
+                             if c in valid_abc_chars['notes'] + 'z']
+                    if found:
+                        break
+                    else:
                         i -= 1
+                    
+                if i >= 0:
                     if trill:
                         abc_list[i] = 'T%s' % (abc_list[i])
                         trill = False
                     if slur:
                         abc_list[i] = '(%s' % (abc_list[i])
-                        note = '%s)' % (note)
+                        note += ')'
                         slur = False
             abc_list.append(note)
+            note = ''
             if not beaming:
                 abc_list.append(' ')
     abc = ''.join(abc_list)
@@ -430,7 +440,6 @@ def pae2abc(pae, fields={}):
             },
         'body': {
             'tune': '',
-            'lyrics': '',
             }
         }
 
