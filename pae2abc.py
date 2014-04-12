@@ -25,7 +25,7 @@ valid_pae_chars = {
     'timesig': '12346789/co.',
     'notelength': '0123456789.',
     'accidentals': 'xbnCDEFGAB[]',
-    'tune': "CDEFGAB ',0123456789.xbngqr-=/:t+();{}!fi",
+    'tune': "CDEFGAB ',0123456789.xbngqr-=/:t+^();{}!fi",
     }
 
 # Valid characters for a few abc elements
@@ -200,6 +200,7 @@ def tune2abc(pae, number=''):
     octave = "'"
     slur = False
     trill = False
+    chord = False
     beaming = False
     acciaccatura = False
     appoggiatura = False
@@ -340,6 +341,9 @@ def tune2abc(pae, number=''):
             # note rest
             abc_list.append('z' + notelength2abc(number))
             abc_list.append(' ')
+        elif c == '^':
+            # Chord
+            chord = c
         elif c in valid_pae_chars['bar']:
             # bar
             bar = c
@@ -399,18 +403,20 @@ def tune2abc(pae, number=''):
                     # closed by the next r
                     note = '{/%s' % (note)
                 acciaccatura = False
-            elif slur or trill:
-                # Both share the same logic; handle them together.
+            elif slur or trill or chord:
+                # All share the same logic; handle them together.
                 # Look for most recent note or silence (for slur only)
+                valid_chars = valid_abc_chars['notes']
+                if slur:
+                    valid_chars +=  'z'
                 i = len(abc_list) - 1
                 while i >= 0:
                     found = [True for c in abc_list[i]
-                             if c in valid_abc_chars['notes'] + 'z']
+                             if c in valid_chars]
                     if found:
                         break
                     else:
                         i -= 1
-                    
                 if i >= 0:
                     if trill:
                         abc_list[i] = 'T%s' % (abc_list[i])
@@ -419,9 +425,36 @@ def tune2abc(pae, number=''):
                         abc_list[i] = '(%s' % (abc_list[i])
                         note += ')'
                         slur = False
+                    if chord:
+                        # Leave notes only, remove spaces
+                        while abc_list and abc_list[-1] == ' ':
+                            abc_list.pop()
+                        # Check whether the chord is already opened
+                        open_chord = True
+                        j = i
+                        while j >= 0:
+                            if abc_list[j] == '[':
+                                # Found a 2 or more notes chord
+                                open_chord = False
+                                break
+                            elif abc_list[j] == ']':
+                                break
+                            j -= 1
+                        if open_chord:
+                            abc_list.insert(i, '[')
+                            if pae_list:
+                                if pae_list[0] == '^':
+                                    chord = ''
+                                else:
+                                    chord = ']'
+                        else:
+                            chord = ']'
             abc_list.append(note)
             note = ''
-            if not beaming:
+            if chord == ']':
+                abc_list.append(chord)
+                chord = ''
+            elif not beaming:
                 abc_list.append(' ')
     abc = ''.join(abc_list)
     return (abc, number)

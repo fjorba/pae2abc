@@ -101,13 +101,7 @@ debug.  I've seen that it is perfectly possible to write such a
 converter without resorting to regular expressions, and I hope that
 the code legibility benefits from that.
 
-Currently it converts most of the basic constructs (clefs,
-accidentals, bars, notes, octaves, rests, beaming, trills, slurs,
-acciacciaturas and appoggiaturas, fermatas, etc. but it is not yet
-complete.  However, in it current state it can convert in less than 2
-minutes about 930.00 incipits from the RISM export database.
-
-TODO: syntax, examples, test suite, irregular groups, chords, etc.
+TODO: test suite, output formats, etc.
 
 
 ## Usage
