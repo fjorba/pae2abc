@@ -454,7 +454,7 @@ def tune2abc(pae, number=''):
             if chord == ']':
                 abc_list.append(chord)
                 chord = ''
-            elif not beaming:
+            if not beaming:
                 abc_list.append(' ')
     abc = ''.join(abc_list)
     return (abc, number)
