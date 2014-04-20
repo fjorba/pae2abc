@@ -247,7 +247,7 @@ def tune2abc(pae, number=''):
             # parentheses) or an irregular rhythmic group.
             i = 0
             notes = ''
-            while pae_list[i] != ')' and i < len(pae_list):
+            while pae_list and pae_list[i] != ')' and i < len(pae_list)-1:
                 if pae_list[i] in valid_pae_chars['notes'] + '-':
                     notes += pae_list[i]
                 i += 1
@@ -364,6 +364,9 @@ def tune2abc(pae, number=''):
             elif octave in [',', ',,', ',,,']:
                 note += c + octave
             if number:
+                if number.startswith('.'):
+                    # That's a syntax error, ignore
+                    number = number[1:]
                 if rhythmic_model:
                     # A new number signals the end of previous rhythmic model
                     rhythmic_model = None
