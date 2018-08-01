@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 # A Plaine and Easie Code to ABC music notation converter
@@ -552,22 +552,21 @@ def convert_pae_file(filename):
     print('%abc-2.1\n')
     n = 0
     fields = {}
-    f = open(filename)
-    for line in f:
-        line = line.strip()
-        if len(line) > 2:
-            if line[0] in valid_abc_chars['fields'] and line[1] == ':':
-                key = line[0]
-                value = line[2:].strip()
-                fields[key] = value
-            elif line[0].startswith('%'):
-                if not 'X' in fields:
-                    n += 1
-                    fields['X'] = n
-                abc = pae2abc(line, fields)
-                print(abc)
-                fields = {}
-    f.close()
+    with open(filename) as f:
+        for line in f:
+            line = line.strip()
+            if len(line) > 2:
+                if line[0] in valid_abc_chars['fields'] and line[1] == ':':
+                    key = line[0]
+                    value = line[2:].strip()
+                    fields[key] = value
+                elif line[0].startswith('%'):
+                    if not 'X' in fields:
+                        n += 1
+                        fields['X'] = n
+                    abc = pae2abc(line, fields)
+                    print(abc)
+                    fields = {}
     return
 
 
