@@ -551,6 +551,7 @@ def convert_pae_file(filename):
 
     print('%abc-2.1\n')
     n = 0
+    pae = ''
     fields = {}
     with open(filename) as f:
         for line in f:
@@ -560,6 +561,21 @@ def convert_pae_file(filename):
                     key = line[0]
                     value = line[2:].strip()
                     fields[key] = value
+                elif line[0] == '@' and ':' in line:
+                    # Verovio PAE file format
+                    key, value = line.split(':', 1)
+                    if key == '@clef':
+                        pae += '%%%s' % (value)
+                    elif key == '@keysig':
+                        pae += '$%s' % (value)
+                    elif key == '@timesig':
+                        pae += '@%s' % (value)
+                    elif key == '@data':
+                        pae += ' %s' % (value)
+                        abc = pae2abc(pae, {})
+                        print(abc)
+                        fields = {}
+                        pae = ''
                 elif line[0].startswith('%'):
                     if not 'X' in fields:
                         n += 1
@@ -577,7 +593,7 @@ def main(args):
         if os.path.isfile(args.file):
             convert_pae_file(args.file)
         else:
-            print('Error: %s not found' % (args.file))
+            print('Error: %s not found' % (args.file), file=sys.stderr)
             sys.exit(1)
     elif args.pae:
         abc = pae2abc(args.pae)
